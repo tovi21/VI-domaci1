@@ -1,85 +1,92 @@
 from dots_and_boxes import DotsAndBoxes
-from agents import ReflexAgent, RandomAgent
+from agents import ReflexAgent, RandomAgent, AlphaBetaAgent, HumanAgent
+import time
+
+def get_agent_choice(player_name):
+    print(f"\nIzaberi Agenta za igraca: {player_name}:")
+    print("1. Human (Ti)")
+    print("2. RandomAgent (Glup)")
+    print("3. ReflexAgent (Pohlepan)")
+    print("4. AlphaBetaAgent (Pametan)")
+    
+    while True:
+        try:
+            choice = int(input("Unos (1-4): "))
+            if choice == 1: return HumanAgent
+            if choice == 2: return RandomAgent
+            if choice == 3: return ReflexAgent
+            if choice == 4: return AlphaBetaAgent
+        except ValueError:
+            pass
+        print("Pogresan unos. Probaj opet.")
 
 def main():
-    # 1. Postavka Igre
+    # --- 1. KONFIGURACIJA TABLE ---
+    print("--- DOTS AND BOXES ARENA ---")
     try:
         rows = int(input("Unesi broj redova (N): "))
         cols = int(input("Unesi broj kolona (M): "))
     except ValueError:
-        print("Koristim podrazumijevano 2x2.")
+        print("Greska. Koristim 2x2.")
         rows, cols = 2, 2
-        
+
     game = DotsAndBoxes(rows, cols)
-    
-    # 2. Izbor Agenta
-    agent = RandomAgent(game)
-    
-    print(f"\n--- IGRAS PROTIV {type(agent).__name__} ---")
-    print("Ti si igrac 'B'. Agent je igrac 'A'.")
-    print("Koordinate unosis kao: red kolona (npr. '0 1')")
-    
-    
+
+    # --- 2. IZBOR  ---
+    AgentClassA = get_agent_choice("A (Prvi)")
+    AgentClassB = get_agent_choice("B (Drugi)")
+
+    agent_a = AgentClassA(game)
+    agent_b = AgentClassB(game)
+
+    print(f"\MEC POCINJE: {type(agent_a).__name__} (A) vs {type(agent_b).__name__} (B)")
+    print("=" * 50)
+
+    # --- 3. GLAVNA PETLJA ---
     while not game.game_over(game.state):
         
-        # Prikazi stanje
+        # Prikaz stanja
         game.print_state(game.state)
-        curr_player = game.state['player']
         
-        if curr_player == 'A':
-            # --- POTEZ AGENTA ---
-            print(f"Agent ({type(agent).__name__}) razmislja...")
-            import time
-            t0 = time.perf_counter()
+        # Odredi ko je na redu
+        curr_player_id = game.state['player']
+        current_agent = agent_a if curr_player_id == 'A' else agent_b
+        
+        print(f"Na potezu: Igrac {curr_player_id} ({type(current_agent).__name__})")
+        
+        # Mjerenje vremena
+        t0 = time.perf_counter()
+        
+        # --- ODLUKA ---
+        action = current_agent.decision(game.state)
+        
+        t1 = time.perf_counter()
+        elapsed = t1 - t0
+        
+        # Provjera da li je agent vratio None (predaja/bug)
+        if action is None:
+            print(f"CRITICAL: Agent {curr_player_id} nije vratio potez! Kraj igre.")
+            break
             
-            action = agent.decision(game.state)
-            
-            t1 = time.perf_counter()
-            print(f"Agent odigrao: {action} (Vrijeme: {t1-t0:.4f}s)")
-            
-            if action is None:
-                print("Agent nema poteza! (Ovo ne bi smjelo da se desi)")
-                break
-                
-            game.state = game.get_successor(game.state, action)
-            
-        else:
-            # --- POTEZ COVJEKA (B) ---
-            print("Tvoj potez (red kolona): ")
-            try:
-                user_input = input().split()
-                if not user_input: continue
-                
-                r, c = int(user_input[0]), int(user_input[1])
-                
-                # Validacija i pretvaranje (r, c) -> (r, c, line_type)
-                possible_moves = game.get_actions(game.state)
-                move_to_play = None
-                
-                for move in possible_moves:
-                    if move[0] == r and move[1] == c:
-                        move_to_play = move
-                        break
-                
-                if move_to_play:
-                    game.state = game.get_successor(game.state, move_to_play)
-                else:
-                    print("!!! NEVALIDAN POTEZ. Zauzeto ili nemoguce")
-                    
-            except (ValueError, IndexError):
-                print("!!! GRESKA. Unesi dva broja.")
+        print(f"Odigrano: {action[0]} {action[1]} ({action[2]}) --- Vrijeme: {elapsed:.4f}s")
+        print("-" * 30)
+        
+        game.state = game.get_successor(game.state, action)
 
-    # 4. KRAJ
+    # --- 4. KRAJ IGRE ---
+    print("\n" + "=" * 50)
+    print("IGRA ZAVRSENA!")
     game.print_state(game.state)
-    print("--- IGRA GOTOVA ---")
+    
     scores = game.state['scores']
+    print(f"KONACAN SKOR -> A: {scores['A']} | B: {scores['B']}")
     
     if scores['A'] > scores['B']:
-        print(f"Pobjednik je AGENT ({scores['A']} : {scores['B']})")
+        print(f"POBJEDNIK: IGRAC A ({type(agent_a).__name__})")
     elif scores['B'] > scores['A']:
-        print(f"Pobjednik si TI ({scores['B']} : {scores['A']})")
+        print(f"POBJEDNIK: IGRAC B ({type(agent_b).__name__})")
     else:
-        print(f"NERIJESENO ({scores['A']} : {scores['A']})")
+        print("NERIJESENO!")
 
 if __name__ == "__main__":
     main()
