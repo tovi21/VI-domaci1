@@ -258,7 +258,7 @@ class AlphaBetaAgent(Agent):
                 if board[r-1][c] == '-' : walls +=1
                 if board[r+1][c] == '-' : walls +=1
                 if board[r][c-1] == '|' : walls +=1
-                if board[r][c+1] == '-' : walls +=1
+                if board[r][c+1] == '|' : walls +=1
 
                 if walls == 3: threes += 1
                 if walls == 2: twos += 1
