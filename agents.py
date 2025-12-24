@@ -59,12 +59,11 @@ class AlphaBetaAgent(Agent):
 
         board_size = len(state['board']) * len(state['board'][0]) # Broj polja u matrici
         
-        if board_size > 2000: # Ogromna tabla (npr. 45x45)
-            safety_margin = 1.5 # Stani na 8.5s
-        elif board_size > 500: # Srednja (npr. 15x15)
-            safety_margin = 0.5 # Stani na 9.5s
+
+        if board_size > 500: # Srednja (npr. 15x15)
+            safety_margin = 0.3 # Stani na 9.5s
         else: # Mala
-            safety_margin = 0.3 # Stani na 9.7s
+            safety_margin = 0.2 # Stani na 9.7s
             
         time_limit = 10.0 - safety_margin
 
@@ -100,6 +99,64 @@ class AlphaBetaAgent(Agent):
 
 
 
+    
+    def order_moves(self, state, actions):
+            
+            #Sortira akcije:
+            #   1. potezi koji donose poen (zatvaraju kutiju)
+            #   2. ostali potezi
+            
+            good_moves = []
+            normal_moves = []
+            
+            # moramo simulirati da bismo znali.
+            # get_successor radi deepcopy, to je presporo za sortiranje!
+            
+            # BRZI TEST:
+            # Umjesto get_successor,zavirimo u tabelu
+            # koristimo logiku iz dots_and_boxes.py, ali ovdje
+            # ILI: Jednostavno pustimo da bude malo sporije jer ce pruning nadoknaditi
+            
+            # test pristup:
+            # Samo provjeri da li je 3. zid.
+            
+            board = state['board']
+            
+            for action in actions:
+                r, c, line = action
+                makes_box = False
+                
+                if line == '-': # Horizontalna
+                    #  gore
+                    if r-2 >= 0:
+                        if (board[r-2][c] == '-' and board[r-1][c-1] == '|' and board[r-1][c+1] == '|'):
+                            makes_box = True
+                    #  dolje
+                    if not makes_box and r+2 < len(board):
+                        if (board[r+2][c] == '-' and board[r+1][c-1] == '|' and board[r+1][c+1] == '|'):
+                            makes_box = True
+                            
+                elif line == '|': # Vertikalna
+                    #  lijevo
+                    if c-2 >= 0:
+                        if (board[r][c-2] == '|' and board[r-1][c-1] == '-' and board[r+1][c-1] == '-'):
+                            makes_box = True
+                    #  desno
+                    if not makes_box and c+2 < len(board[0]):
+                        if (board[r][c+2] == '|' and board[r-1][c+1] == '-' and board[r+1][c+1] == '-'):
+                            makes_box = True
+                
+                if makes_box:
+                    good_moves.append(action)
+                else:
+                    normal_moves.append(action)
+                    
+            # Spojimo: Prvo dobri, pa ostali (promijesaju se ostali)
+            return good_moves + normal_moves
+
+    
+
+
     def alpha_beta_search(self, state, depth, start_time, time_limit):
         
         alpha = float('-inf')
@@ -111,6 +168,9 @@ class AlphaBetaAgent(Agent):
 
         actions = self.game.get_actions(state)
         # mozda da se sortiraju akcije 
+
+        # dodato sortianje:
+        actions = self.order_moves(state, actions)
 
         for a in actions:
             # provjeri vrijeme
@@ -160,7 +220,12 @@ class AlphaBetaAgent(Agent):
         v = float('-inf')
         actions = self.game.get_actions(state)
 
+        # dodato sortiranje
+        actions = self.order_moves(state, actions)
+
         for a in actions:
+            if time.time() - start_time > time_limit: raise TimeoutError
+
             new_state = self.game.get_successor(state, a)
             next_player = new_state['player']
 
@@ -200,7 +265,12 @@ class AlphaBetaAgent(Agent):
         v = float('+inf')
         actions = self.game.get_actions(state)
 
+        # dodato sortiranje
+        actions = self.order_moves(state, actions)
+
+        
         for a in actions:
+            if time.time() - start_time > time_limit: raise TimeoutError
             new_state = self.game.get_successor(state, a)
             next_player = new_state['player']
 
