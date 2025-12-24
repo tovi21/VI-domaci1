@@ -81,12 +81,12 @@ class DotsGUI:
                     rect = (x + 5, y + 5, self.spacing_x - 10, self.spacing_y - 10)
                     pygame.draw.rect(self.screen, color, rect)
 
-        # 2. LINIJE (Postojeće)
+        # 2. LINIJE (postojece)
         for r in range(r_dim):
             for c in range(c_dim):
                 cell = board[r][c]
                 
-                # Crtaj SAMO ako je eksplicitno linija
+                # crta samo ako je eksplicitno linija
                 if cell == '-' or cell == '|':
                     
                     color = BLACK
@@ -95,8 +95,8 @@ class DotsGUI:
                     
                     self.draw_line_by_coords(r, c, color)
 
-        # 3. HOVER EFEKT (Sjenka)
-        # Uzimamo poziciju miša
+        # 3. HOVER efekat (Sjenka)
+        # uzimamo poziciju misa
         mx, my = pygame.mouse.get_pos()
         potential_move = self.get_clicked_line((mx, my))
         
@@ -128,24 +128,24 @@ class DotsGUI:
 
 
     def get_clicked_line(self, pos):
-        """Pretvara (x, y) miša u (r, c) poteza."""
+        # Prtvara (x, y) misa u (r, c) poteza
         mx, my = pos
         
-        # 1. Nađi najbližu tačku
-        # (Obrnuta formula od get_coords)
+        # 1. nadji najblizu tacku
+        # (obrnuta formula od get_coords)
         if self.spacing_x == 0 or self.spacing_y == 0: return None
         
         c_dot = round((mx - self.padding) / self.spacing_x)
         r_dot = round((my - self.padding) / self.spacing_y)
         
-        # Ograniči da ne izađemo van table
+        # ogranici da ne izadjemo van table
         c_dot = max(0, min(c_dot, self.n_dots_cols - 1))
         r_dot = max(0, min(r_dot, self.n_dots_rows - 1))
         
-        # Koordinate te tačke
+        # koord te tacke
         dx, dy = self.get_coords(r_dot, c_dot)
         
-        # 2. Odredi smjer klika (Gore, Dolje, Lijevo, Desno)
+        # 2. Odredi smjer klika (gore, dolje, lijevo, desno)
         diff_x = mx - dx
         diff_y = my - dy
         
@@ -156,20 +156,20 @@ class DotsGUI:
         
         # Da li je klik horizontalan ili vertikalan?
         if abs(diff_x) > abs(diff_y): 
-            # Horizontalno (Lijevo ili Desno)
+            # Horizontalno (lijevo ili desno)
             if diff_x > 0: # Desno
-                # Linija desno od tačke (r, c)
-                # U matrici: red = 2*r, kolona = 2*c + 1
+                # linija desno od tacke (r, c)
+                # u matrici: red = 2*r, kolona = 2*c + 1
                 if c_dot < self.n_dots_cols - 1:
                     move = (2 * r_dot, 2 * c_dot + 1)
             else: # Lijevo
-                # Linija lijevo od tačke (r, c) -> isto što i desno od (r, c-1)
+                # linija lijevo od tadke (r, c) -> isto sto i desno od (r, c-1)
                 if c_dot > 0:
                     move = (2 * r_dot, 2 * (c_dot - 1) + 1)
         else:
-            # Vertikalno (Gore ili Dolje)
-            if diff_y > 0: # Dolje
-                # Linija ispod tačke (r, c)
+            # Vertikalno (gore ili dolje)
+            if diff_y > 0: # dolje
+                # linija ispod tačke (r, c)
                 # U matrici: red = 2*r + 1, kolona = 2*c
                 if r_dot < self.n_dots_rows - 1:
                     move = (2 * r_dot + 1, 2 * c_dot)
@@ -180,9 +180,9 @@ class DotsGUI:
         return move
 
     def wait_for_click(self):
-        """Petlja koja čeka dok čovjek ne klikne validan potez."""
+        # Petlja ceka dok covjek ne klikne validan potez
         while True:
-            # Obrada događaja (da se prozor ne zamrzne)
+            # Obrada (da se prozor ne zamrzne)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -192,22 +192,19 @@ class DotsGUI:
                     if event.button == 1: # Lijevi klik
                         move = self.get_clicked_line(event.pos)
                         
-                        # Ako smo kliknuli na liniju, provjeri jel validna (prazna)
+                        # ako smo kliknuli na liniju, provjeri jel validna (prazna)
                         if move:
                             r, c = move
                             board = self.game.state['board']
-                            # Provjera granica za svaki slučaj
+                            # provjera granica 
                             if 0 <= r < len(board) and 0 <= c < len(board[0]):
                                 if board[r][c] == ' ':
-                                    # Dodaj treći element (tip linije)
-                                    # Ako je red paran -> '-', ako je neparan -> '|'
+                                    # dodaj treci element (tip linije)
+                                    # ako je red paran -> '-', ako je neparan -> '|'
                                     line_type = '-' if r % 2 == 0 else '|'
                                     return (r, c, line_type)
             
-            # Crtaj stalno dok čekamo (zbog hover efekta)
-            # Ovdje ne znamo last_action iz main-a, pa šaljemo None.
-            # (Hover će raditi, ali zelena linija zadnjeg poteza će možda treperiti ili nestati
-            # dok čovjek razmišlja, osim ako ne proslijedimo last_action i u ovu funkciju.
-            # Za sad je ok i bez toga).
+            # Crtaj stalno dok ceka (zbog hover efekta)
+            #  -> ne znamo last_action iz main-a, pa saljemo None.
             self.draw() 
             time.sleep(0.02)
