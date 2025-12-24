@@ -33,9 +33,14 @@ class DotsAndBoxes:
 
     def print_state(self, state):
         
-        print("  " + " ".join([str(x) for x in range(len(state['board'][0]))]))
+        header = "   " + "".join([f"{x:2} " for x in range(len(state['board'][0]))])
+        print(header)
+        
         for i, row in enumerate(state['board']):
-            print(f"{i} " + " ".join(row))
+            row_str = ""
+            for cell in row:
+                row_str += f"{cell:2} " # svaka celija zauzima 2 karaktera + razmak
+            print(f"{i:2} {row_str}")
         
         print(f"Score - A: {state['scores']['A']}, B: {state['scores']['B']}")
         print(f"Player on move: {state['player']}")
