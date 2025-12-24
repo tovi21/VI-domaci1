@@ -39,7 +39,7 @@ def main():
     agent_a = AgentClassA(game)
     agent_b = AgentClassB(game)
 
-    print(f"\MEC POCINJE: {type(agent_a).__name__} (A) vs {type(agent_b).__name__} (B)")
+    print(f"\nMEC POCINJE: {type(agent_a).__name__} (A) vs {type(agent_b).__name__} (B)")
     print("=" * 50)
 
     # --- 3. GLAVNA PETLJA ---
