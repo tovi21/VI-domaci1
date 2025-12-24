@@ -239,7 +239,7 @@ class AlphaBetaAgent(Agent):
         
 
         # Lanci i 3 strane kutije
-        # -> moramo brojati koliko ima kurija sa 3 zatvorene stranice (to su ziceri), i koliko je lanaca (zatvoren sa dvije)
+        # -> moramo brojati koliko ima kutija sa 3 zatvorene stranice (to su ziceri), i koliko je lanaca (zatvoren sa dvije)
 
         threes = 0
         twos = 0
@@ -276,7 +276,7 @@ class AlphaBetaAgent(Agent):
              heuristic = base_score*10 - threes*5 - twos*1
 
         # base_score su najvredniji
-        # threes: kurije sa 3 zida su skoro poeni, ko je na potezu ih dobija
+        # threes: kutije sa 3 zida su skoro poeni, ko je na potezu ih dobija
         # twos: samo potencial
         # -> poenta: ako ostavimo protivniku tabelu punu trojki izgibili smo jer ce hruristika biti veoma negativna
 
