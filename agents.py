@@ -59,11 +59,12 @@ class AlphaBetaAgent(Agent):
 
         board_size = len(state['board']) * len(state['board'][0]) # Broj polja u matrici
         
+        self.transposition_table = {} 
+        self.nodes_visited = 0
+        self.tt_hits = 0
+        self.transposition_table = {}
 
-        if board_size > 500: # Srednja (npr. 15x15)
-            safety_margin = 0.3 # Stani na 9.5s
-        else: # Mala
-            safety_margin = 0.2 # Stani na 9.7s
+        safety_margin = 0.1
             
         time_limit = 10.0 - safety_margin
 
@@ -91,6 +92,7 @@ class AlphaBetaAgent(Agent):
             
             except TimeoutError: # kad istekne vrijeme msamo bacimo error i odma izlazimo iz duboke rekruzije
                 print(f'Isteklo vrijeme na dubini {depth}') 
+                print(f"Nodes: {self.nodes_visited}, TT Hits: {self.tt_hits}, Depth reached: {depth}")
                 break
 
             depth += 1
@@ -185,14 +187,29 @@ class AlphaBetaAgent(Agent):
 
 
     def max_value(self, state, depth, alpha, beta, start_time, time_limit, my_player):
+        self.nodes_visited += 1
+        # Novo: provjera 'cacha'-a
+        state_key = self.get_state_key(state)
+
+        # kesiramo vrijednost koju smo vratili, ali to je validno samo ako nismo radili cutoff
+        if state_key in self.transposition_table:
+            entry = self.transposition_table[state_key]
+            if entry['depth'] >= depth:
+                self.tt_hits += 1
+                return entry['value']
 
         # baza
         if self.game.game_over(state):
             self.is_terminal_search = True
-            return self.evaluate_state(state, my_player)
+            val = self.evaluate_state(state, my_player)
+            # Keširaj i kraj!
+            self.transposition_table[state_key] = {'value': val, 'depth': depth}
+            return val
         
         if depth == 0:
-            return self.evaluate_state(state, my_player)
+            val = self.evaluate_state(state, my_player)
+            self.transposition_table[state_key] = {'value': val, 'depth': depth}
+            return val
         
         if time.time() - start_time > time_limit:
             raise TimeoutError
@@ -221,23 +238,42 @@ class AlphaBetaAgent(Agent):
             v = max(v, v2)
 
             if v >= beta:
+                 # kesiranje prije izlaska (ovo je donja granica, ali cuvamo je)
+                self.transposition_table[state_key] = {'value': v, 'depth': depth}
                 return v
             
             alpha = max(alpha, v)
-        
+
+        self.transposition_table[state_key] = {'value': v, 'depth': depth}
         return v
     
 
 
 
     def min_value(self, state, depth, alpha, beta, start_time, time_limit, my_player):
+        self.nodes_visited += 1
+
+
+
+        # --- Kesiranje ---
+        state_key = self.get_state_key(state)
+        
+        if state_key in self.transposition_table:
+            entry = self.transposition_table[state_key]
+            if entry['depth'] >= depth:
+                self.tt_hits += 1
+                return entry['value']
 
         if self.game.game_over(state):
             self.is_terminal_search = True
-            return self.evaluate_state(state, my_player)
+            val = self.evaluate_state(state, my_player)
+            self.transposition_table[state_key] = {'value': val, 'depth': depth}
+            return val
         
         if depth == 0:
-            return self.evaluate_state(state, my_player)
+            val = self.evaluate_state(state, my_player)
+            self.transposition_table[state_key] = {'value': val, 'depth': depth}
+            return val
         
         if time.time() - start_time > time_limit:
             raise TimeoutError
@@ -256,6 +292,9 @@ class AlphaBetaAgent(Agent):
             next_player = new_state['player']
 
             # 'my_player' je i dalje Agent(A) ali je trenutno na potezu B
+            # ako sam ja 'min_value' znaci da je trenutno na potezu protivnik
+            # ako je nexxt_player != my_player onda igra protivnik
+
             if next_player != my_player: # dodatni potez za protivnika 
                 # analogno, zove se min i ne smannjuje se dubina
                 v2 = self.min_value(new_state, depth, alpha, beta, start_time, time_limit, my_player)
@@ -265,10 +304,12 @@ class AlphaBetaAgent(Agent):
             v = min(v, v2)
 
             if v <= alpha:
+                self.transposition_table[state_key] = {'value': v, 'depth': depth}
                 return v
             
             beta = min(beta, v)
     
+        self.transposition_table[state_key] = {'value': v, 'depth': depth}
         return v
     
 
@@ -335,9 +376,38 @@ class AlphaBetaAgent(Agent):
     
 
 
+    # Pokusaj optimizacije
+    #  i) scena 1
+    #   -> ja povucem gornju liniju (stanja A)
+    #   -> protivnik povuce donju (sad smo u stanje B)
+    # ii) scena 2
+    #   -> protivnik povuce gornju (stanje C)
+    #   -> ja povucem donju (stanje D)
+    # 
+    # +--> B i D su ista stanja, tabela bi izgeladal isto a minimax posto to ne zna bi oba stabla trazio nezavisno
+    #
+    # Resenje: napravimo recnik sa stanjima i vrijednostima 
+    # -> problems to smo do sad radili stanja da su lista listi sto ne moze biti kljuc u recniku
+    #   +-> pretvorimo ih u torku torki
+    
+    def get_state_key(self, state):
+        board = state['board']
+
+        board_tuple = tuple(tuple(row) for row in board)
+
+        # sad dodamo informaicju o igracu, jer stanje nije isto ako ja na redu A ili B
+        key = (board_tuple, state['player'])
+
+        return key
+    
+    
+
+
 # Da mozemo da igramo protiv njega
 
 class HumanAgent(Agent):
+
+    
     def decision(self, state):
         
         print("Tvoj potez (red kolona): ")
