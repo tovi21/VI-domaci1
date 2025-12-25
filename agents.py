@@ -62,7 +62,6 @@ class AlphaBetaAgent(Agent):
         self.transposition_table = {} 
         self.nodes_visited = 0
         self.tt_hits = 0
-        self.transposition_table = {}
 
         safety_margin = 0.1
             
