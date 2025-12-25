@@ -253,8 +253,6 @@ class AlphaBetaAgent(Agent):
     def min_value(self, state, depth, alpha, beta, start_time, time_limit, my_player):
         self.nodes_visited += 1
 
-
-
         # --- Kesiranje ---
         state_key = self.get_state_key(state)
         

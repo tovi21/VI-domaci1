@@ -149,7 +149,7 @@ class DotsGUI:
         diff_x = mx - dx
         diff_y = my - dy
         
-        # Zona mrtvog ugla (da ne kliknemo tačno na tačku)
+        # Zona mrtvog ugla (da ne kliknemo tacno na tacku)
         if abs(diff_x) + abs(diff_y) < 15: return None 
         
         move = None
@@ -169,7 +169,7 @@ class DotsGUI:
         else:
             # Vertikalno (gore ili dolje)
             if diff_y > 0: # dolje
-                # linija ispod tačke (r, c)
+                # linija ispod tacke (r, c)
                 # U matrici: red = 2*r + 1, kolona = 2*c
                 if r_dot < self.n_dots_rows - 1:
                     move = (2 * r_dot + 1, 2 * c_dot)

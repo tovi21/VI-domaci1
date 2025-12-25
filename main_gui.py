@@ -18,7 +18,7 @@ def play_with_gui():
     agent_a = HumanAgent(game)
     agent_b = AlphaBetaAgent(game)
     
-    print(f"Meč: {type(agent_a).__name__} vs {type(agent_b).__name__}")
+    print(f"Mec: {type(agent_a).__name__} vs {type(agent_b).__name__}")
 
     last_action = None #
     
