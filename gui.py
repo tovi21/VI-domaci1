@@ -38,7 +38,7 @@ class DotsGUI:
         return x, y
 
     def draw_line_by_coords(self, r, c, color):
-            """Pomocna funkcija koja crta liniju na osnovu r, c iz matrice."""
+            # Pomocna funkcija koja crta liniju na osnovu r, c iz matrice
             
             # Horizontalna: r paran, c neparan
             if r % 2 == 0: 
